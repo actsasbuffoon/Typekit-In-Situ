@@ -15,6 +15,7 @@ TIS is little more than a Rake script that compiles your HTML, CSS, and Javascri
 * [FSSM](http://github.com/ttilley/fssm)
 * [Rake](http://rake.rubyforge.org/)
 * [JSON](http://flori.github.com/json/)
+* [Sinatra](http://sinatrarb.com)
 
 ### A note about my biases
 
@@ -46,18 +47,16 @@ Now use your developer toolbar to run the javascript. If you're using Chrome, th
 
 That's it! If you'd like to get the old page content back, just refresh the page.
 
-## Embedding images
+## Images
 
-You can embed images via Data:URI. It's only working with HTML img elements right now, but I plan to get CSS backgrounds working eventually.
-
-If you look at the "embedded_img" template, then you should get a decent idea of how it works.
+TIS has a Sinatra based fileserver so you can even use images in your templates.
 
 * Put your image in the images/#{your_project_name}/ directory, and name it whatever you like (foo.png, for instance).
 * In your HAML file, write this: %img{:src=>"foo.png"}
 
-And TIS should take care of the rest. Note that browsers have different restrictions on how large a given embedded image can be.
+TIS runs a string substitution over each template, replacing the image name with the path to the file on the fileserver.
 
-I'm having difficulty figuring out why I can't embed images as CSS backgrounds. If you see what I'm doing wrong, feel free to fix it, or tell me how to fix it.
+The images included in the "embedded_img" template come from the [Dortmund Icon Pack by Patricia Clausnitzer](http://findicons.com/pack/2357/dortmund#) and Russel at [openclipart.org](http://www.openclipart.org/detail/74179).
 
 ## How do I add my own templates?
 
@@ -92,7 +91,6 @@ If you've got a design you'd like to submit, then I'd love to see it.
 ## Work in progress
 
 * TIS should allow users to write plain HTML, Javascript, and CSS. Right now, only HAML, SASS, and Coffeescript work.
-* Can't figure out how to get Data:URI working with CSS backgrounds, though it works well with html img tags.
 
 ## Legal notice
 
