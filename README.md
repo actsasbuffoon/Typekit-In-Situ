@@ -80,7 +80,6 @@ If you've got a design you'd like to submit, then I'd love to see it.
 
 * TIS should allow users to write plain HTML, Javascript, and CSS. Right now, only HAML, SASS, and Coffeescript work.
 * Only inline javascript works at the moment.
-* Remove the CSS included on the default Typekit page.
 * Come up with a way to include images. Possibly using [inline data](http://en.wikipedia.org/wiki/Data_URI_scheme).
 
 ## Legal notice
