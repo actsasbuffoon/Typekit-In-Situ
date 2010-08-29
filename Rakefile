@@ -1,5 +1,6 @@
 require 'FSSM'
 require 'json'
+require 'datafy'
 
 desc "Autoupdate files."
 task :watch do
@@ -14,19 +15,51 @@ task :watch do
         
         html_files = process({:before_dir => "haml", :before_ext => "haml",
                              :after_dir  => "html",   :after_ext  => "html"}) {|args| `haml #{args[:before_name]} #{args[:after_dir]}/#{args[:after_name]}`}
-
+        
+        image_files = {}
+        Dir.glob("images/*").each do |dir|
+          temp = dir.split("/").last
+          image_files[temp] = {}
+          Dir.glob("#{dir}/*").each do |f|
+            image_files[temp][f.split("/").last] = Datafy.file :filename => "#{f}"
+          end
+        end
+        
+        html_files.each_pair do |key, html|
+          if image_files[key]
+            image_files[key].each_pair do |filename, image|
+              if html.include?(filename)
+                puts "HTML #{key} | #{filename}" 
+                html_files[key] = html.gsub(filename, image)
+              end
+            end
+          end
+        end
+        
+        css_files.each_pair do |key, css|
+          if image_files[key]
+            image_files[key].each_pair do |filename, image|
+              if css_files[key].include?(filename)
+                puts "CSS #{key} #{filename}"
+                css_files[key] = css.gsub(filename, image)
+              end
+            end
+          end
+        end
+        
         templates = {}
         
         html_files.keys.each do |k|
-          templates[k] = <<-EOS
+          templates[k] = {}
+          templates[k]["head"] = <<-EOS
             <style type='text/css'>
               #{css_files[k]}
             </style>
             <script type='text/javascript'>
               #{js_files[k]}
             </script>
-            #{html_files[k]}
           EOS
+          templates[k]["body"] = html_files[k]
         end
         ifile = "templates = #{templates.to_json};\n"
         ifile += File.read("javascripts/application.js")

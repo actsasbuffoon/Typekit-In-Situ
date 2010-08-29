@@ -46,6 +46,19 @@ Now use your developer toolbar to run the javascript. If you're using Chrome, th
 
 That's it! If you'd like to get the old page content back, just refresh the page.
 
+## Embedding images
+
+You can embed images via Data:URI. It's only working with HTML img elements right now, but I plan to get CSS backgrounds working eventually.
+
+If you look at the "embedded_img" template, then you should get a decent idea of how it works.
+
+* Put your image in the images/#{your_project_name}/ directory, and name it whatever you like (foo.png, for instance).
+* In your HAML file, write this: %img{:src=>"foo.png"}
+
+And TIS should take care of the rest. Note that browsers have different restrictions on how large a given embedded image can be.
+
+I'm having difficulty figuring out why I can't embed images as CSS backgrounds. If you see what I'm doing wrong, feel free to fix it, or tell me how to fix it.
+
 ## How do I add my own templates?
 
 The HAML, SASS, and Coffeescript directories contain the templates. To make a new one, just create a new HAML file in the haml directory and a new SASS file in the sass directory. Make sure they have the same name (Except the extension, of course). There's no need to reference the SASS/CSS or JS file in your HAML, it will be compiled and inlined by the watcher process.
@@ -79,7 +92,7 @@ If you've got a design you'd like to submit, then I'd love to see it.
 ## Work in progress
 
 * TIS should allow users to write plain HTML, Javascript, and CSS. Right now, only HAML, SASS, and Coffeescript work.
-* Come up with a way to include images. Possibly using [inline data](http://en.wikipedia.org/wiki/Data_URI_scheme).
+* Can't figure out how to get Data:URI working with CSS backgrounds, though it works well with html img tags.
 
 ## Legal notice
 
