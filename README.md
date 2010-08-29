@@ -68,7 +68,7 @@ No, and please kindly jump off a cliff.
 
 TIS just lets you see a more realistic preview of a font. When first looking at the font previews on Typekit, I thought a lot of the fonts looked rather boring. Then I went to the gallery section and I was floored. The examples were gorgeous, especially the ones using fonts that I had specifically written off as boring not 30 seconds before. The font didn't change, but its context did.
 
-Fonts are rarely beautify in isolation, you have to see them in a real page. Typography is more than just a font, it has to do with cadence, layout, contrast, etc. An editable textarea is like seeing a mountain lion at a zoo, TIS hopes to be like coming face to face with a mountain lion in the jungle.
+Fonts are rarely beautiful in isolation, you have to see them in a real page. Typography is more than just a font, it has to do with cadence, layout, contrast, etc. An editable textarea is like seeing a mountain lion at a zoo, TIS hopes to be like coming face to face with a mountain lion in the jungle.
 
 ### I made an awesome template. Would you like to add it to the official repo?
 

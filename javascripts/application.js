@@ -2,6 +2,7 @@ templates = {"temp1":"<style type='text/css'>\nbody {\n  margin: 0px; }\n\n#temp
 ;
 var cls;
 cls = $('div.specimen-editor textarea').attr('class');
+$("link[charset]").remove();
 $("body").children().remove();
 $("body").append(templates["temp2"]);
 $($("body").children("div")[0]).find("*").addClass(cls);
