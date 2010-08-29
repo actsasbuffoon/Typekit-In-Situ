@@ -48,7 +48,7 @@ That's it! If you'd like to get the old page content back, just refresh the page
 
 ## How do I add my own templates?
 
-The HAML and SASS directories contain the templates. To make a new one, just create a new HAML file in the haml directory and a new SASS file in the sass directory. Make sure they have the same name (Except the extension, of course). There's no need to reference the SASS/CSS file in your HAML, it will be compiled and inlined by the watcher process.
+The HAML, SASS, and Coffeescript directories contain the templates. To make a new one, just create a new HAML file in the haml directory and a new SASS file in the sass directory. Make sure they have the same name (Except the extension, of course). There's no need to reference the SASS/CSS or JS file in your HAML, it will be compiled and inlined by the watcher process.
 
 In order to use a different template, you'll need to edit coffeescripts/application.coffee, and change this line of code:
 
@@ -79,7 +79,6 @@ If you've got a design you'd like to submit, then I'd love to see it.
 ## Work in progress
 
 * TIS should allow users to write plain HTML, Javascript, and CSS. Right now, only HAML, SASS, and Coffeescript work.
-* Only inline javascript works at the moment.
 * Come up with a way to include images. Possibly using [inline data](http://en.wikipedia.org/wiki/Data_URI_scheme).
 
 ## Legal notice

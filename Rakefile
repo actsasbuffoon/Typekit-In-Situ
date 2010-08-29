@@ -5,25 +5,30 @@ desc "Autoupdate files."
 task :watch do
   FSSM.monitor(".", "**/*") do
     update do |base, name|
-      unless name =~ /\.html$/ || name =~ /application\.js$/ || name =~ /\.css$/
-        `coffee --no-wrap -o javascripts -c coffeescripts/application.coffee`
-        css_files = {}
-        html_files = {}
+      unless name =~ /\.html$/ || name =~ /\.js$/ || name =~ /\.css$/
+        js_files = process({:before_dir => "coffeescripts", :before_ext => "coffee",
+                           :after_dir  => "javascripts",   :after_ext  => "js"}) {|args| `coffee --no-wrap -o #{args[:after_dir]} -c #{args[:before_name]}`}
+        
+        css_files = process({:before_dir => "sass", :before_ext => "sass",
+                            :after_dir  => "css",   :after_ext  => "css"}) {|args| `sass #{args[:before_name]} #{args[:after_dir]}/#{args[:after_name]}`}
+        
+        html_files = process({:before_dir => "haml", :before_ext => "haml",
+                             :after_dir  => "html",   :after_ext  => "html"}) {|args| `haml #{args[:before_name]} #{args[:after_dir]}/#{args[:after_name]}`}
+
         templates = {}
-        Dir.glob("sass/*.sass").each do |f|
-          css_name = f.split("/").last.gsub(".sass", ".css")
-          `sass #{f} css/#{css_name}`
-          css_files[css_name.gsub(".css", "")] = File.read("css/#{css_name}")
-        end
-        Dir.glob("haml/*.haml").each do |f|
-          html_name = f.split("/").last.gsub(".haml", ".html")
-          `haml #{f} html/#{html_name}`
-          html_files[html_name.gsub(".html", "")] = File.read("html/#{html_name}")
-        end
+        
         html_files.keys.each do |k|
-          templates[k] = "<style type='text/css'>\n#{css_files[k]}\n</style>\n#{html_files[k]}"
+          templates[k] = <<-EOS
+            <style type='text/css'>
+              #{css_files[k]}
+            </style>
+            <script type='text/javascript'>
+              #{js_files[k]}
+            </script>
+            #{html_files[k]}
+          EOS
         end
-        ifile = "templates = #{templates.to_json}\n;\n"
+        ifile = "templates = #{templates.to_json};\n"
         ifile += File.read("javascripts/application.js")
         File.open("javascripts/application.js", "w") {|f| f.write ifile}
         `cat javascripts/application.js | pbcopy`
@@ -31,4 +36,15 @@ task :watch do
       end
     end
   end
+end
+
+def process(args = {})
+  ret = {}
+  Dir.glob("#{args[:before_dir]}/*.#{args[:before_ext]}").each do |f|
+    args[:before_name] = f
+    args[:after_name] = f.split("/").last.gsub(args[:before_ext], args[:after_ext])
+    yield args
+    ret[args[:after_name].gsub(".#{args[:after_ext]}", "")] = File.read("#{args[:after_dir]}/#{args[:after_name]}")
+  end
+  ret
 end
