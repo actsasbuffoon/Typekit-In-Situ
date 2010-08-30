@@ -21,8 +21,6 @@ TIS is little more than a Rake script that compiles your HTML, CSS, and Javascri
 
 This project was put together in about 2 hours. As such, it's strongly suited towards my preferred tools. I intend to fix that over time, but for the time being, it's a very opinionated piece of software.
 
-TIS currently only works with HAML and SASS. It won't work if you edit the HTML or CSS files directly. I intend to fix that eventually, but that's how it is for now.
-
 I less than three Chrome, so the prefab templates currently have a strong preference for Webkit based browsers. That said, you can easily add your own templates that will conform to your browser's rendering engine.
 
 I adore CSS3, so the prefab templates make heavy use of it. If you're the knuckle-dragging sort (AKA an IE user) then you're out of luck.
@@ -47,26 +45,26 @@ Now use your developer toolbar to run the javascript. If you're using Chrome, th
 
 That's it! If you'd like to get the old page content back, just refresh the page.
 
+## How do I add my own templates?
+
+Templates go in the "templates" directory. Just create a new directory, and add your HTML/HAML, CSS/SASS, and JS/Coffeescript.
+
+In order to use a different template, you'll need to edit application.coffee, and change this line of code:
+
+    $("body").append(templates["magazine"])
+
+You'll need to change "magazine" to the name of your template (the directory name inside the "templates" directory).
+
 ## Images
 
 TIS has a Sinatra based fileserver so you can even use images in your templates.
 
-* Put your image in the images/#{your_project_name}/ directory, and name it whatever you like (foo.png, for instance).
-* In your HAML file, write this: %img{:src=>"foo.png"}
+* Create a folder called "public" in your template directory.
+* In your HTML file, write this: <img src="foo.png"/>
 
 TIS runs a string substitution over each template, replacing the image name with the path to the file on the fileserver.
 
-The images included in the "embedded_img" template come from the [Dortmund Icon Pack by Patricia Clausnitzer](http://findicons.com/pack/2357/dortmund#) and Russel at [openclipart.org](http://www.openclipart.org/detail/74179).
-
-## How do I add my own templates?
-
-The HAML, SASS, and Coffeescript directories contain the templates. To make a new one, just create a new HAML file in the haml directory and a new SASS file in the sass directory. Make sure they have the same name (Except the extension, of course). There's no need to reference the SASS/CSS or JS file in your HAML, it will be compiled and inlined by the watcher process.
-
-In order to use a different template, you'll need to edit coffeescripts/application.coffee, and change this line of code:
-
-    $("body").append(templates["temp2"])
-
-You'll need to change "temp2" to the name of your template (the filename minus the extension).
+The images included in the "image_example" template come from the [Dortmund Icon Pack by Patricia Clausnitzer](http://findicons.com/pack/2357/dortmund#) and Russel at [openclipart.org](http://www.openclipart.org/detail/74179).
 
 ## FAQ
 
@@ -87,10 +85,6 @@ Fonts are rarely beautiful in isolation, you have to see them in a real page. Ty
 **YES!** I'm a programmer by trade. I like to think I'm not terrible at web design, but let's be honest; I'm more comfortable with recursive algorithms than IE's broken box model.
 
 If you've got a design you'd like to submit, then I'd love to see it.
-
-## Work in progress
-
-* TIS should allow users to write plain HTML, Javascript, and CSS. Right now, only HAML, SASS, and Coffeescript work.
 
 ## Legal notice
 

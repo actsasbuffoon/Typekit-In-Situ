@@ -1,3 +1,4 @@
+require 'fileutils'
 require 'FSSM'
 require 'json'
 require 'sinatra/base'
@@ -5,94 +6,140 @@ require 'sinatra/base'
 desc "Autoupdate files."
 task :watch do
   port = 4567
-  run_monitor(port)
+  run_monitor port
   start_fileserver(port).join
 end
 
 def run_monitor(port)
-  monitor = Thread.new do
-    FSSM.monitor(".", "**/*") do
+  tis = TIS.new(port)
+  Thread.new do
+    FSSM.monitor("templates", "**/*") do
       update do |base, name|
-        unless name =~ /\.html$/ || name =~ /\.js$/ || name =~ /\.css$/
-          js_files = process({:before_dir => "coffeescripts", :before_ext => "coffee",
-                             :after_dir  => "javascripts",   :after_ext  => "js"}) {|args| `coffee --no-wrap -o #{args[:after_dir]} -c #{args[:before_name]}`}
-        
-          css_files = process({:before_dir => "sass", :before_ext => "sass",
-                              :after_dir  => "css",   :after_ext  => "css"}) {|args| `sass #{args[:before_name]} #{args[:after_dir]}/#{args[:after_name]}`}
-        
-          html_files = process({:before_dir => "haml", :before_ext => "haml",
-                               :after_dir  => "html",   :after_ext  => "html"}) {|args| `haml #{args[:before_name]} #{args[:after_dir]}/#{args[:after_name]}`}
-        
-          image_files = {}
-          Dir.glob("images/*").each do |dir|
-            temp = dir.split("/").last
-            image_files[temp] = {}
-            Dir.glob("#{dir}/*").each do |f|
-              image_files[temp][f.split("/").last] = f.gsub(/^images\//, "")
-            end
-          end
-        
-          html_files.each_pair do |key, html|
-            if image_files[key]
-              image_files[key].each_pair do |filename, path|
-                if html.include?(filename)
-                  html_files[key] = html.gsub(filename, "http://localhost:#{port}/#{path}")
-                end
-              end
-            end
-          end
-        
-          css_files.each_pair do |key, css|
-            if image_files[key]
-              image_files[key].each_pair do |filename, path|
-                if css_files[key].include?(filename)
-                  css_files[key] = css.gsub(filename, "http://localhost:#{port}/#{path}")
-                end
-              end
-            end
-          end
-        
-          templates = {}
-        
-          html_files.keys.each do |k|
-            templates[k] = <<-EOS
-              <style type='text/css'>
-                #{css_files[k]}
-              </style>
-              <script type='text/javascript'>
-                #{js_files[k]}
-              </script>
-              #{html_files[k]}
-            EOS
-          end
-          ifile = "templates = #{templates.to_json};\n"
-          ifile += File.read("javascripts/application.js")
-          File.open("javascripts/application.js", "w") {|f| f.write ifile}
-          `cat javascripts/application.js | pbcopy`
-          puts "Finished - #{Time.now}"
-        end
+        temp_message "Updating..."
+        tis.clear_output
+        tis.preprocess
+        tis.prepare_assets
+        tis.map_assets
+        tis.substitute_assets
+        tis.create_json
+        tis.compile_main
+        temp_message "Finished"
       end
     end
   end
 end
 
-def process(args = {})
-  ret = {}
-  Dir.glob("#{args[:before_dir]}/*.#{args[:before_ext]}").each do |f|
-    args[:before_name] = f
-    args[:after_name] = f.split("/").last.gsub(args[:before_ext], args[:after_ext])
-    yield args
-    ret[args[:after_name].gsub(".#{args[:after_ext]}", "")] = File.read("#{args[:after_dir]}/#{args[:after_name]}")
-  end
-  ret
-end
-
 class TISFileServer < Sinatra::Base
-  set :public, File.dirname(__FILE__) + '/images'
+  set :public, File.dirname(__FILE__) + '/output/public'
 end
 
 def start_fileserver(port)
-  fileserver = Thread.new do
+  Thread.new do
     TISFileServer.run! :host => 'localhost', :port => (port)
+  end
+end
+
+def temp_message(mess)
+  print "#{mess}#{" " * 10}\r"
+  $stdout.flush
+end
+
+class TIS
+  
+  def initialize(port)
+    @port = port
+  end
+  
+  # Set ourselves up with a clean output directory.
+  def clear_output
+    FileUtils.remove_dir "output" if File.exist? "output"
+    FileUtils.mkdir "output"
+  end
+
+  # Compile HAML, SASS, and Coffeescript templates.
+  def preprocess
+    Dir.glob("templates/*").each do |template_dir|
+      dir_name = File.basename template_dir
+      FileUtils.mkdir "output/#{dir_name}"
+      Dir.glob("#{template_dir}/*").each do |file|
+        if file =~ /\.haml$/
+          `haml #{file} output/#{dir_name}/#{File.basename(file).sub(/\.haml$/, ".html")}`
+        elsif file =~ /\.sass$/
+          `sass #{file} output/#{dir_name}/#{File.basename(file).sub(/\.sass$/, ".css")}`
+        elsif file =~ /\.coffee$/
+          `coffee -o output/#{dir_name} --no-wrap #{file}`
+        else
+          FileUtils.cp_r file, "output/#{dir_name}"
+        end
+      end
+    end
+  end
+  
+  # Copy the public assets to the public directory for the
+  # fileserver.
+  def prepare_assets
+    Dir.glob("output/*").each do |template_dir|
+      dir_name = File.basename template_dir
+      FileUtils.mkdir_p "output/public/#{dir_name}"
+      Dir.glob("#{template_dir}/public").each do |pub_dir|
+        FileUtils.cp_r Dir.glob("#{template_dir}/public/*"), "output/public/#{dir_name}"
+      end
+    end
+  end
+
+  # Get all the public assets and their server locations
+  def map_assets
+    ret = {}
+    Dir.glob("output/public/*").each do |asset_dir|
+      dir_name = File.basename asset_dir
+      ret[dir_name] = {}
+      Dir.glob("#{asset_dir}/*").each do |filepath|
+        filename = File.basename filepath
+        ret[dir_name][filename] = "http://localhost:#{@port}/#{dir_name}/#{filename}"
+      end
+    end
+    @public_assets = ret
+  end
+
+  # Replace asset references with the server location.
+  # For example, "<img src='foo.bar'/>" might become
+  # "<img src='http://localhost:4567/my_awesome_template/foo.bar'/>"
+  # It should work in HTML, CSS, and JS.
+  def substitute_assets
+    Dir.glob("output/*").each do |template_dir|
+      dir_name = File.basename template_dir
+      Dir.glob("#{template_dir}/*.*") do |file|
+        content = File.read file
+        @public_assets[dir_name].each_pair do |assetname, assetpath|
+          content.gsub! assetname, assetpath
+        end
+        File.open(file, "w") {|f| f.write content}
+      end
+    end
+  end
+  
+  # Combine all the HTML, CSS, and JS files, and return JSON.
+  def create_json
+    templates = {}
+    Dir.glob("output/*").each do |template_dir|
+      dir_name = File.basename template_dir
+      next if dir_name == "public"
+      data = []
+      Dir.glob("#{template_dir}/*.*") do |file|
+        data << "<script type='text/javascript'>#{File.read file}</script>" if file =~ /\.js$/
+        data << "<style type='text/css'>#{File.read file}</style>" if file =~ /\.css$/
+        data << File.read(file) if file =~ /\.html$/
+      end
+      templates[dir_name] = data.join("\n")
+    end
+    @templates = templates.to_json
+  end
+  
+  # Wrap everything up can copy it to the clipboard.
+  def compile_main
+    `coffee --no-wrap -o output -c application.coffee`
+    content = File.read "output/application.js"
+    File.open("output/application.js", "w") {|f| f.write "templates = #{@templates};\n#{content}"}
+    `cat output/application.js | pbcopy`
   end
 end
