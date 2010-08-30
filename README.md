@@ -64,8 +64,6 @@ TIS has a Sinatra based fileserver so you can even use images in your templates.
 
 TIS runs a string substitution over each template, replacing the image name with the path to the file on the fileserver.
 
-The images included in the "image_example" template come from the [Dortmund Icon Pack by Patricia Clausnitzer](http://findicons.com/pack/2357/dortmund#) and Russel at [openclipart.org](http://www.openclipart.org/detail/74179).
-
 ## FAQ
 
 ### Is Typekit worth the money?
