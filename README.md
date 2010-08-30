@@ -60,7 +60,7 @@ You'll need to change "magazine" to the name of your template (the directory nam
 TIS has a Sinatra based fileserver so you can even use images in your templates.
 
 * Create a folder called "public" in your template directory.
-* In your HTML file, write this: <img src="foo.png"/>
+* In your HTML file, write this: &lt;img src="foo.png"/>
 
 TIS runs a string substitution over each template, replacing the image name with the path to the file on the fileserver.
 
